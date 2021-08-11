@@ -1,25 +1,25 @@
 <template>
-  <div id="app" :class="typeof weather.lives != 'undefined' && weather.lives.temperature > 16 ? 'warm' : ''">
+  <div id="app" :class="typeof weather.lives != 'undefined' && weather.data.lives[0].temperature > 16 ? 'warm' : ''">
     <main>
       <div class="search-box">
         <input 
           type="text" 
           class="search-bar" 
-          placeholder="Search..."
+          placeholder="输入查询....."
           v-model="query"
           @keypress="fetchLocation"
         />
       </div>
 
-      <div class="weather-wrap" v-if="typeof weather.lives != 'undefined'">
+      <div class="weather-wrap" v-if="typeof weather.data != 'undefined'">
         <div class="location-box">
-          <div class="location">{{ weather.lives[0].province }}, {{ weather.lives[0].city }}</div>
+          <div class="location">{{weather.data.lives[0].province}}, {{weather.data.lives[0].city}}</div>
           <div class="date">{{ dateBuilder() }}</div>
         </div>
 
         <div class="weather-box">
-          <div class="temp">{{ Math.round(weather.lives[0].temperature) }}°c</div>
-          <div class="weather">{{ weather.lives[0].weather }}</div>
+          <div class="temp">{{ Math.round(weather.data.lives[0].temperature) }}°c</div>
+          <div class="weather">{{ weather.data.lives[0].weather}}</div>
         </div>
       </div>
     </main>
@@ -27,12 +27,13 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
   name: 'app',
   data () {
     return {
       //api_key是高德API的key值
-      api_key: 'c416335139a116a',
+      api_key: '3523c1374382d36d9c416335139a116a',
       url_base: 'https://restapi.amap.com/v3/',
       query: '',
       city: {},
@@ -40,21 +41,36 @@ export default {
     }
   },
   methods: {
-    fetchLocation (e) {
-      if (e.key == "Enter") {
-        fetch(`${this.url_base}geocode/geo?address=${this.query}&key=${this.api_key}`)
-        .then(res => {
-          return res.json();
-        }).then(this.setQuery)
+    fetchLocation(e) {
+      if (e.key == "Enter"){
+        //作用域问题 解决
+        axios.get('https://restapi.amap.com/v3/geocode/geo',{
+          params:{address:this.query,key:this.api_key}
+        }).then((c) => {
+          this.city =c;
+          axios.get('https://restapi.amap.com/v3/weather/weatherInfo',{
+            params: {city:this.city.data.geocodes[0].adcode,key:this.api_key}
+          }).then(this.setResults)
+        } )
       }
     },
-    setQuery (results) {
-      this.city = results;
-      fetch(`${this.url_base}weather/weatherInfo?city=${this.city.geocodes[0].adcode}&key=${this.api_key}`)
-      .then(res => {
-        return res.json();
-      }).then(this.setResults);
-    },
+    //原生js fetch实现
+
+    //fetchLocation (e) {
+    //  if (e.key == "Enter") {
+    //    fetch(`${this.url_base}geocode/geo?address=${this.query}&key=${this.api_key}`)
+    //    .then(res => {
+    //     return res.json();
+    //    }).then(this.setQuery);
+    //  }
+    //},
+    //setQuery (c) {
+    //  this.city = c;
+    //  fetch(`${this.url_base}weather/weatherInfo?city=${this.city.geocodes[0].adcode}&key=${this.api_key}`)
+    //  .then(res => {
+    //    return res.json();
+    //  }).then(this.setResults);
+    //},
     setResults (results) {
       this.weather = results;
     },
@@ -73,7 +89,6 @@ export default {
   }
 }
 </script>
-
 <style>
 * {
   margin: 0;
