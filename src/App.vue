@@ -34,7 +34,7 @@ export default {
     return {
       //api_key是高德API的key值35
       api_key: '23c1374382d36d9c416335139a116a',
-      url_base: 'https://restapi.amap.com/v3/',
+      //url_base: 'https://restapi.amap.com/v3/',
       query: '',
       city: {},
       weather: {}
